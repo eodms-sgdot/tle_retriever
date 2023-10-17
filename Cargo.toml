@@ -1,0 +1,15 @@
+[package]
+name = "tle_retriever"
+version = "0.1.0"
+edition = "2021"
+include = ["/src"]
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+clap = "4.4"
+config = "0.13"
+log = "0.4"
+log4rs = "1.2"
+serde = "1.0"
+sgp4 = "1.2"
+ureq = { version = "2.8", features = ["json"] }
