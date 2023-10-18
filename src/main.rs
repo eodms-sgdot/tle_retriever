@@ -2,6 +2,8 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::{LineWriter,Write};
+use std::time::Duration;
+use ureq::Agent;
 use serde::{Serialize,Deserialize};
 use config::Config as CConfig;
 use log::{info,debug,LevelFilter};
@@ -34,9 +36,8 @@ pub struct Settings {
 	pub username: String,
 	pub password: String,
 	pub norad_ids: Vec<u32>,
-	pub connection_timeout: u32,
-	pub connection_read_timeout: u32,
-	pub connection_retries: u8,
+	pub connection_timeout: u64,
+	pub connection_read_timeout: u64,
 	pub output_filename: String,
 	pub output_directory: String,
 }
@@ -113,7 +114,13 @@ fn main() -> Result<(),Box<dyn Error>> {
 	let nids: String = settings.norad_ids.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(",");
 	query.push_str(&nids);
 	query.push_str("/orderby/TLE_LINE1%20ASC/format/json");
-	let response = ureq::post("https://www.space-track.org/ajaxauth/login").send_form(&[
+
+	let agent: Agent = ureq::AgentBuilder::new()
+		.timeout_connect(Duration::from_secs(settings.connection_timeout))
+		.timeout_read(Duration::from_secs(settings.connection_read_timeout))
+		.build();
+
+	let response = agent.post("https://www.space-track.org/ajaxauth/login").send_form(&[
 		("identity", &settings.username),
 		("password", &settings.password),
 		("query", &query),
